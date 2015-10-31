@@ -1,5 +1,9 @@
 import unittest
+from peaa.range import Range
 
-class Test_Csv(unittest.TestCase):
-    def test_foo(self):
-        self.assertTrue(True)
+class TestRange(unittest.TestCase):
+    def test_contains(self):
+        r = Range(0, 2)
+        self.assertTrue(0 in r)
+        self.assertTrue(1 in r)
+        self.assertTrue(2 in r)
