@@ -4,11 +4,9 @@ import doctest
 
 
 def get_suite():
-    start_module = 'tests'
-
     loader = unittest.TestLoader()
     suite = loader.discover("tests")
-    suite.addTest(doctest.DocTestSuite("peaa"))
+    suite.addTest(doctest.DocTestSuite("nasuta"))
     suite.addTest(doctest.DocFileSuite('README.rst', optionflags=doctest.ELLIPSIS))
 
     return suite

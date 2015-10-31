@@ -1,5 +1,6 @@
 import unittest
-from peaa.range import Range
+
+from nasuta.range import Range
 
 class TestRange(unittest.TestCase):
     def test_contains(self):
