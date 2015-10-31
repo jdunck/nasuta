@@ -1,8 +1,10 @@
 .eggs
 .tox
+target_venv
 __pycache__
 *.pyc
 *.pyo
 .DS_Store
 *.egg-info
 dist
+build
