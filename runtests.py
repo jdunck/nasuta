@@ -5,7 +5,7 @@ import doctest
 
 def get_suite():
     loader = unittest.TestLoader()
-    suite = loader.discover("tests")
+    suite = loader.discover("test_range")
     suite.addTest(doctest.DocTestSuite("nasuta"))
     suite.addTest(doctest.DocFileSuite('README.rst', optionflags=doctest.ELLIPSIS))
 
