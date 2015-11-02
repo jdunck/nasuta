@@ -1,32 +1,69 @@
-from datetime import datetime, timedelta
+from datetime import datetime as dt, timedelta
 import unittest
 
 from nasuta.range import DatetimeRange, IntegerRange
 
 class TestRange(unittest.TestCase):
-    def test_contains(self):
-        r = IntegerRange(1, 2)
-        self.assertFalse(0 in r)
-        self.assertTrue(1 in r)
-        self.assertTrue(2 in r)
-        self.assertFalse(3 in r)
+    def setUp(self):
+        self.r00 = IntegerRange(0, 0)
+        self.r01 = IntegerRange(0, 1)
+        self.r02 = IntegerRange(0, 2)
+        self.r03 = IntegerRange(0, 3)
+        self.r12 = IntegerRange(1, 2)
+        self.r_date = DatetimeRange(dt(2013, 1, 1), dt(2014, 1, 1))
 
-        r = DatetimeRange(datetime(2013, 1, 1), datetime(2014, 1, 1))
+    def test_contains(self):
+        self.assertFalse(0 in self.r12)
+        self.assertTrue(1 in self.r12)
+        self.assertTrue(2 in self.r12)
+        self.assertFalse(3 in self.r12)
+
+        r = DatetimeRange(dt(2013, 1, 1), dt(2014, 1, 1))
         self.assertFalse(
-            datetime(2013, 1, 1) - r.sigma in r)
+            dt(2013, 1, 1) - r.sigma in r)
         self.assertTrue(
-            datetime(2013, 1, 1) in r)
+            dt(2013, 1, 1) in r)
         self.assertTrue(
-            datetime(2014, 1, 1) in r)
+            dt(2014, 1, 1) in r)
         self.assertFalse(
-            datetime(2013, 1, 1) - r.sigma in r)
+            dt(2013, 1, 1) - r.sigma in r)
 
     def test_empty(self):
-        self.assertTrue(IntegerRange(0, 0).is_empty)
-        self.assertFalse(IntegerRange(0, 1).is_empty)
+        self.assertTrue(self.r00.is_empty)
+        self.assertFalse(self.r01.is_empty)
 
-        dt = datetime(2013,1,1,0,0,0)
+        d = dt(2013,1,1,0,0,0)
         self.assertTrue(
-            DatetimeRange(dt,dt).is_empty)
+            DatetimeRange(d, d).is_empty)
         self.assertFalse(
-            DatetimeRange(dt, dt + timedelta(seconds=1)).is_empty)
+            DatetimeRange(d, d + timedelta(seconds=1)).is_empty)
+
+    def test_comparison(self):
+        self.assertNotEqual(self.r01, self.r02)
+        self.assertNotEqual(self.r01, self.r03)
+        self.assertNotEqual(self.r01, self.r12)
+        self.assertEqual(self.r01, self.r01)
+        self.assertNotEqual(self.r01, self.r_date)
+
+        self.assertFalse(self.r12 < self.r01)
+        self.assertTrue(self.r12 < self.r02)
+
+    def test_duration(self):
+        self.assertEqual(0, self.r00.duration)
+        self.assertEqual(2, self.r02.duration)
+
+    def test_sentinels(self):
+        self.assertEqual(self.r00.min, self.r01.min)
+        self.assertTrue(self.r00.min < -2**99)
+        self.assertTrue(-2**99 > self.r00.min)
+
+        self.assertEqual(self.r00.max, self.r01.max)
+        self.assertTrue(2**99 < self.r00.max)
+        self.assertTrue(self.r00.max > 2**99)
+
+    def test_unbounded(self):
+        r = DatetimeRange.up_to(dt(2014,1,1))
+        self.assertEqual(r.duration, r.max)
+        self.assertTrue(dt(2013,1,1) in r)
+        self.assertTrue(dt(1,1,1) in r)
+        self.assertFalse(dt(2014,1,2) in r)
