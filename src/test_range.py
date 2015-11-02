@@ -67,3 +67,19 @@ class TestRange(unittest.TestCase):
         self.assertTrue(dt(2013,1,1) in r)
         self.assertTrue(dt(1,1,1) in r)
         self.assertFalse(dt(2014,1,2) in r)
+
+    def test_includes(self):
+        self.assertTrue(self.r02.includes(self.r01))
+        self.assertTrue(self.r02.includes(self.r00))
+        self.assertTrue(self.r02.includes(self.r02))
+        self.assertFalse(self.r02.includes(self.r03))
+        self.assertTrue(self.r03.includes(self.r12))
+
+    def test_overlaps(self):
+        self.assertTrue(self.r02.overlaps(self.r01))
+        self.assertTrue(self.r02.overlaps(self.r00))
+        self.assertTrue(self.r02.overlaps(self.r02))
+        self.assertTrue(self.r02.overlaps(self.r03))
+        self.assertFalse(self.r00.overlaps(self.r12))
+        self.assertFalse(self.r12.overlaps(self.r00))
+        self.assertTrue(self.r00.overlaps(self.r03))

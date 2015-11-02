@@ -48,7 +48,6 @@ class _Min(object):
 class Range(object):
     sigma = None
     kind = None
-    factory = None
 
     def __init__(self, start, end):
         if start > end:
@@ -57,14 +56,22 @@ class Range(object):
         self.start = start
         self.end = end
 
-    def __contains__(self, other):
-        return self._start < other < self._end
+    def __contains__(self, timepoint):
+        return self._start < timepoint < self._end
+
+    def includes(self, other):
+        return other.start in self and other.end in self
+
+    def overlaps(self, other):
+        return self.start in other or self.end in other or self.includes(other)
 
     def _diff(self, a, b):
         return abs(a - b) >= self.sigma
 
     def __eq__(self, other):
         if self.kind is not other.kind:
+            return False
+        if not isinstance(other, type(self)):
             return False
         if self._diff(self.start, other.start):
             return False
@@ -149,12 +156,10 @@ class Range(object):
 class DatetimeRange(Range):
     sigma = datetime.timedelta(microseconds=1)
     kind = datetime.datetime
-    factory = datetime.datetime.now
 
 class DateRange(Range):
     sigma = datetime.timedelta(hours=1)
     kind = datetime.date
-    factory = datetime.date.today
 
     def __init__(self, start, end):
         if isinstance(start, datetime):
@@ -166,37 +171,10 @@ class DateRange(Range):
 class IntegerRange(Range):
     sigma = 0.1
     kind = int
-    factory = int
 
 
 
 """
-class DateRange...
-    public static DateRange upTo(MfDate end) {
-        return new DateRange(MfDate.PAST, end);
-    }
-    public static DateRange startingOn(MfDate start) {
-        return new DateRange(start, MfDate.FUTURE);
-    }
-    public static DateRange EMPTY = new DateRange(new MfDate(2000,4,1), new MfDate(2000,1,1));
-
-It's useful to provide operations which allow you to compare ranges.
-
-class DateRange...
-    public boolean equals (Object arg) {
-        if (! (arg instanceof DateRange)) return false;
-        DateRange other = (DateRange) arg;
-        return start.equals(other.start) && end.equals(other.end);
-    }
-    public int hashCode() {
-        return start.hashCode();
-    }
-    public boolean overlaps(DateRange arg) {
-        return arg.includes(start) || arg.includes(end) || this.includes(arg);
-    }
-    public boolean includes(DateRange arg) {
-        return this.includes(arg.start) && this.includes(arg.end);
-    }
 
 For most applications this is all you need. But certain situations suggest other useful behaviors. One it to find out what gap exists between two ranges.
 
