@@ -49,35 +49,50 @@ class _Min(object):
     def __abs__(self):
         return self
 
+class InvalidRange(ValueError):
+    pass
+
 @total_ordering
 class Range(object):
+    """
+    `sigma` is the largest "difference" that makes no difference.
+      This is needed for continuuous ranges like floats, where
+      precision can be lost.
+    `kind` is the type of start/end,
+    """
     sigma = None
     kind = None
 
     def __init__(self, start, end):
         if start > end:
-            start, end = end, start
+            raise InvalidRange()
 
         self.start = start
         self.end = end
 
     def __contains__(self, timepoint):
+        if self.is_empty:
+            return False
         return self._start < timepoint < self._end
 
     def includes(self, other):
+        if other.is_empty:
+            return False
         return other.start in self and other.end in self
 
     def overlaps(self, other):
-        return self.start in other or self.end in other or self.includes(other)
+        return self.includes(other) or self._start in other or self.end_ in other
 
     def _diff(self, a, b):
+        if isinstance(a, self._sentinels) or isinstance(b, self._sentinels):
+            return not isinstance(a, type(b))
         return abs(a - b) >= self.sigma
 
     def __eq__(self, other):
         if self.kind is not other.kind:
-            return False
+            return NotImplemented
         if not isinstance(other, type(self)):
-            return False
+            return NotImplemented
         if self._diff(self.start, other.start):
             return False
         if self._diff(self.end, other.end):
@@ -86,7 +101,7 @@ class Range(object):
 
     def __lt__(self, other):
         if not isinstance(other, type(self)):
-            return False
+            return NotImplemented
 
         if self._diff(self.start, other.start):
             return self.start < other.start
@@ -105,7 +120,15 @@ class Range(object):
         else:
             lower, higher = other, self
 
-        return type(self)(lower.end, higher.start)
+        if self._diff(lower.end, higher.start):
+            return type(self)(lower.end, higher.start)
+        else:
+            return self.empty
+
+    def abuts(self, other):
+        return (not self.overlaps(other)) and self.gap(other) == self.empty
+
+
 
     @classproperty
     @classmethod
@@ -127,11 +150,19 @@ class Range(object):
         return self.start - self.sigma
 
     @property
+    def start_(self):
+        return self.start + self.sigma
+
+    @property
     def _end(self):
         """
         Sigma fudge for simpler comparisons.
         """
         return self.end + self.sigma
+
+    @property
+    def end_(self):
+        return self.end - self.sigma
 
     @property
     def is_empty(self):
@@ -199,36 +230,3 @@ class DateRange(Range):
 class IntegerRange(Range):
     sigma = 0.1
     kind = int
-
-
-
-"""
-
-Another is to detect whether two date ranges abut each other.
-
-class DateRange...
-    public boolean abuts(DateRange arg) {
-        return !this.overlaps(arg) && this.gap(arg).isEmpty();
-    }
-
-And to see if a group of ranges completly partitions another range.
-
-class DateRange...
-    public boolean partitionedBy(DateRange[] args) {
-        if (!isContiguous(args)) return false;
-        return this.equals(DateRange.combination(args));
-    }
-    public static DateRange combination(DateRange[] args) {
-        Arrays.sort(args);
-        if (!isContiguous(args)) throw new IllegalArgumentException("Unable to combine date ranges");
-        return new DateRange(args[0].start, args[args.length -1].end);
-    }
-    public static boolean isContiguous(DateRange[] args) {
-        Arrays.sort(args);
-        for (int i=0; i<args.length - 1; i++) {
-                if (!args[i].abuts(args[i+1])) return false;
-        }
-        return true;
-    }
-
-"""

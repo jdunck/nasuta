@@ -9,6 +9,7 @@ class TestRange(unittest.TestCase):
         self.r01 = IntegerRange(0, 1)
         self.r02 = IntegerRange(0, 2)
         self.r03 = IntegerRange(0, 3)
+        self.r35 = IntegerRange(3, 5)
         self.r12 = IntegerRange(1, 2)
         self.r45 = IntegerRange(4, 5)
         self.r_date = DatetimeRange(dt(2013, 1, 1), dt(2014, 1, 1))
@@ -71,19 +72,20 @@ class TestRange(unittest.TestCase):
 
     def test_includes(self):
         self.assertTrue(self.r02.includes(self.r01))
-        self.assertTrue(self.r02.includes(self.r00))
+        self.assertFalse(self.r02.includes(self.r00))
         self.assertTrue(self.r02.includes(self.r02))
         self.assertFalse(self.r02.includes(self.r03))
         self.assertTrue(self.r03.includes(self.r12))
+        self.assertTrue(self.r03.includes(self.r02))
 
     def test_overlaps(self):
         self.assertTrue(self.r02.overlaps(self.r01))
-        self.assertTrue(self.r02.overlaps(self.r00))
+        self.assertFalse(self.r02.overlaps(self.r00))
         self.assertTrue(self.r02.overlaps(self.r02))
         self.assertTrue(self.r02.overlaps(self.r03))
         self.assertFalse(self.r00.overlaps(self.r12))
         self.assertFalse(self.r12.overlaps(self.r00))
-        self.assertTrue(self.r00.overlaps(self.r03))
+        self.assertFalse(self.r00.overlaps(self.r03))
 
     def test_eq(self):
         self.assertTrue(self.r02 == self.r02)
@@ -93,3 +95,7 @@ class TestRange(unittest.TestCase):
         self.assertEqual(self.r02.gap(self.r45),
             IntegerRange(2,4))
         self.assertEqual(IntegerRange.empty, self.r02.gap(self.r01))
+
+    def test_abuts(self):
+        self.assertTrue(self.r03.abuts(self.r35))
+        self.assertFalse(self.r03.abuts(self.r45))
