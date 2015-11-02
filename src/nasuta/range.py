@@ -27,6 +27,9 @@ class _Max(object):
     def __eq__(self, other):
         return isinstance(other, type(self))
 
+    def __abs__(self):
+        return self
+
 @total_ordering
 class _Min(object):
     def __sub__(self, other):
@@ -43,6 +46,8 @@ class _Min(object):
     def __eq__(self, other):
         return isinstance(other, type(self))
 
+    def __abs__(self):
+        return self
 
 @total_ordering
 class Range(object):
@@ -80,9 +85,32 @@ class Range(object):
         return True
 
     def __lt__(self, other):
-        if self.kind is not other.kind:
-            return cmp(self.kind, other.kind)
-        return self.duration < other.duration
+        if not isinstance(other, type(self)):
+            return False
+
+        if self._diff(self.start, other.start):
+            return self.start < other.start
+
+        if self._diff(self.end, other.end):
+            return self.end < other.end
+
+        return False
+
+    def gap(self, other):
+        if self.overlaps(other):
+            return self.empty
+
+        if self < other:
+            lower, higher = self, other
+        else:
+            lower, higher = other, self
+
+        return type(self)(lower.end, higher.start)
+
+    @classproperty
+    @classmethod
+    def empty(cls):
+        return cls(cls.min, cls.min)
 
     @property
     def duration(self):
@@ -176,27 +204,6 @@ class IntegerRange(Range):
 
 """
 
-For most applications this is all you need. But certain situations suggest other useful behaviors. One it to find out what gap exists between two ranges.
-
-class DateRange...
-    public DateRange gap(DateRange arg){
-        if (this.overlaps(arg)) return DateRange.EMPTY;
-        DateRange lower, higher;
-        if (this.compareTo(arg) < 0) {
-            lower = this;
-            higher = arg;
-        }
-        else {
-            lower = arg;
-            higher = this;
-        }
-        return new DateRange(lower.end.addDays(1), higher.start.addDays(-1));
-    }
-    public int compareTo(Object arg) {
-        DateRange other = (DateRange) arg;
-        if (!start.equals(other.start)) return start.compareTo(other.start);
-        return end.compareTo(other.end);
-    }
 Another is to detect whether two date ranges abut each other.
 
 class DateRange...
